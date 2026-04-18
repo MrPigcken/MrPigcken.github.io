@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assert/css/style.css">
-    <link rel="stylesheet" href="assert/css/all.min.css">
     <link rel="icon" type="image/png" href="assert/image/avatar.png">
     <title>杨癫发骁的Github主页</title>
 </head>
 <body>
+    <!-- 主题切换按钮 -->
+    <button id="theme-toggle" class="theme-toggle" title="切换主题">
+        <i class="fas fa-moon"></i>
+    </button>
+
     <!-- 加载动画 -->
     <div class="loading">
         <div class="loading-text">加载中...</div>
@@ -22,7 +26,7 @@
             <h1 data-text="杨癫发骁" class="glitch">杨癫发骁</h1>
             <h1 data-text="MrPigcken">MrPigcken</h1>
             <br>
-            <p class="title typewriter"></p>
+            <p class="title typewriter">初生</p>
             <p class="location"><i class="fas fa-map-marker-alt"></i> 杭州天元公学</p>
             
             <!-- 导航 -->
@@ -31,7 +35,6 @@
                     <a href="#about" class="nav-link"><i class="fas fa-user"></i> 关于我</a>
                     <a href="#projects" class="nav-link"><i class="fas fa-code"></i> 项目</a>
                     <a href="#experience" class="nav-link"><i class="fas fa-history"></i> 经历</a>
-                    <!-- <a href="#contact" class="nav-link"><i class="fas fa-envelope"></i> 联系我</a> -->
                 </div>
             </nav>
         </header>
@@ -39,28 +42,31 @@
         <!-- 主要内容 -->
         <main>
             <!-- 关于我 -->
-            <section id="about" class="section">
+            <!-- <section id="about" class="section">
                 <h2 class="section-title"><i class="fas fa-user-circle"></i> 关于我</h2>
                 <p class="about-text">
-                    请输入文本
+                    我是一名热爱技术的全栈开发者，专注于创建具有未来感的赛博朋克风格应用。我擅长将复杂的技术概念转化为直观、美观的用户界面，并且热衷于探索人工智能与前端开发的交叉领域。
                 </p>
                 <p class="about-text">
-                    请输入文本
+                    我目前就读于杭州天元公学，担任班级科技委员，组织编程兴趣小组。我热爱学习新技术，并且乐于分享我的知识和经验。在空闲时间，我喜欢参与开源项目，探索前沿技术，以及开发个人项目来提升我的技能。
                 </p>
                 
                 <h3 style="color: var(--neon-pink); margin-top: 30px; margin-bottom: 15px;">技能：</h3>
                 <div class="skills">
-                    <!-- <span class="skill">HTML5</span>
+                    <span class="skill">HTML5</span>
                     <span class="skill">CSS3</span>
                     <span class="skill">JavaScript</span>
                     <span class="skill">Python</span>
                     <span class="skill">Java</span>
                     <span class="skill">Git</span>
                     <span class="skill">GitHub</span>
-                    <span class="skill"> responsive design</span>
-                    <span class="skill">赛博朋克设计</span> -->
+                    <span class="skill">响应式设计</span>
+                    <span class="skill">赛博朋克设计</span>
+                    <span class="skill">人工智能</span>
+                    <span class="skill">机器学习</span>
+                    <span class="skill">数据可视化</span>
                 </div>
-            </section>
+            </section> -->
 
             <!-- 项目 -->
             <section id="projects" class="section">
@@ -216,9 +222,8 @@
                     </div> -->
                 </div>
             </section>
-
             <!-- 联系我 -->
-            <!-- <section id="contact" class="section">
+            <section id="contact" class="section">
                 <h2 class="section-title"><i class="fas fa-envelope"></i> 联系我</h2>
                 <form class="contact-form">
                     <div class="form-group">
@@ -238,8 +243,9 @@
                     
                     <button type="submit" class="submit-btn"><i class="fas fa-paper-plane"></i> 发送留言</button>
                 </form>
-            </section> -->
+            </section>
         </main>
+        
 
         <!-- 页脚 -->
         <footer>
