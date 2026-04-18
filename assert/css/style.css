@@ -1,5 +1,6 @@
 /* 赛博朋克风格CSS */
 :root {
+  /* 深色主题变量 */
   --neon-blue: #00f3ff;
   --neon-pink: #ff00ff;
   --neon-purple: #9d00ff;
@@ -8,6 +9,22 @@
   --darker-bg: #050510;
   --medium-bg: #121225;
   --light-bg: #1a1a30;
+  --text-color: #ffffff;
+  --text-secondary: #cccccc;
+}
+
+/* 浅色主题变量 */
+[data-theme="light"] {
+  --neon-blue: #0066cc;
+  --neon-pink: #cc00cc;
+  --neon-purple: #6600cc;
+  --neon-green: #00cc00;
+  --dark-bg: #f0f0ff;
+  --darker-bg: #e0e0ff;
+  --medium-bg: #e8e8ff;
+  --light-bg: #f8f8ff;
+  --text-color: #1a1a2e;
+  --text-secondary: #333333;
 }
 
 * {
@@ -18,13 +35,14 @@
 
 body {
   background-color: var(--dark-bg);
-  color: #ffffff;
+  color: var(--text-color);
   font-family: 'Courier New', monospace;
   line-height: 1.6;
   overflow-x: hidden;
   background-image: 
     radial-gradient(circle at 25% 25%, rgba(0, 243, 255, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 75% 75%, rgba(255, 0, 255, 0.1) 0%, transparent 50%);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* 网格背景 */
@@ -50,6 +68,34 @@ body::before {
   100% {
     background-position: 50px 50px;
   }
+}
+
+/* 主题切换按钮 */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: var(--medium-bg);
+  color: var(--neon-blue);
+  border: 1px solid var(--neon-blue);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  font-size: 1.2rem;
+  box-shadow: 0 0 10px var(--neon-blue);
+}
+
+.theme-toggle:hover {
+  background-color: var(--neon-blue);
+  color: var(--dark-bg);
+  box-shadow: 0 0 20px var(--neon-blue);
+  transform: rotate(180deg);
 }
 
 /* 容器 */
@@ -105,7 +151,7 @@ header::after {
 h1 {
   font-size: 3rem;
   margin-bottom: 10px;
-  color: #ffffff;
+  color: var(--text-color);
   text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
   position: relative;
   display: inline-block;
@@ -179,7 +225,7 @@ nav {
 }
 
 .nav-link {
-  color: #ffffff;
+  color: var(--text-color);
   text-decoration: none;
   padding: 10px 20px;
   background-color: var(--medium-bg);
@@ -224,6 +270,7 @@ main {
   border: 1px solid var(--neon-purple);
   position: relative;
   overflow: hidden;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .section::before {
@@ -249,6 +296,7 @@ main {
   font-size: 1.1rem;
   line-height: 1.8;
   margin-bottom: 20px;
+  color: var(--text-secondary);
 }
 
 .skills {
@@ -331,7 +379,7 @@ main {
 
 .project-description {
   margin-bottom: 15px;
-  color: #cccccc;
+  color: var(--text-secondary);
 }
 
 .project-tech {
@@ -485,10 +533,10 @@ main {
 }
 
 .timeline-description {
-  color: #cccccc;
+  color: var(--text-secondary);
 }
 
-/* 联系表单 */
+/* 联系方式 */
 .contact-form {
   max-width: 600px;
   margin: 0 auto;
@@ -568,7 +616,7 @@ footer::before {
 }
 
 .social-link {
-  color: #ffffff;
+  color: var(--text-color);
   font-size: 1.5rem;
   transition: all 0.3s ease;
   display: inline-block;
@@ -587,7 +635,7 @@ footer::before {
 }
 
 .copyright {
-  color: #888888;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 

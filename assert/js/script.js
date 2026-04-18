@@ -2,6 +2,51 @@
 
 // 页面加载完成后执行
 document.addEventListener('DOMContentLoaded', function() {
+  // 主题切换功能
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeIcon = themeToggle.querySelector('i');
+  
+  // 检查用户之前的主题偏好
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+  }
+  
+  // 主题切换事件
+  themeToggle.addEventListener('click', function() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    // 更新主题
+    document.documentElement.setAttribute('data-theme', newTheme);
+    
+    // 保存主题偏好
+    localStorage.setItem('theme', newTheme);
+    
+    // 更新图标
+    updateThemeIcon(newTheme);
+    
+    // 添加切换动画效果
+    themeToggle.style.transform = 'rotate(180deg)';
+    setTimeout(() => {
+      themeToggle.style.transform = 'rotate(0)';
+    }, 300);
+  });
+  
+  // 更新主题图标
+  function updateThemeIcon(theme) {
+    if (theme === 'light') {
+      themeIcon.classList.remove('fa-moon');
+      themeIcon.classList.add('fa-sun');
+      themeToggle.title = '切换到深色主题';
+    } else {
+      themeIcon.classList.remove('fa-sun');
+      themeIcon.classList.add('fa-moon');
+      themeToggle.title = '切换到浅色主题';
+    }
+  }
+
   // 加载动画
   setTimeout(function() {
     const loading = document.querySelector('.loading');
@@ -91,142 +136,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // 联系表单验证
-  const contactForm = document.querySelector('.contact-form');
-  if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      // 获取表单数据
-      const nameInput = document.querySelector('input[name="name"]');
-      const emailInput = document.querySelector('input[name="email"]');
-      const messageInput = document.querySelector('textarea[name="message"]');
-      
-      // 简单验证
-      let isValid = true;
-      let errorMessage = '';
-      
-      if (!nameInput.value.trim()) {
-        isValid = false;
-        errorMessage = '请输入您的姓名';
-        highlightError(nameInput);
-      } else if (!emailInput.value.trim()) {
-        isValid = false;
-        errorMessage = '请输入您的邮箱';
-        highlightError(emailInput);
-      } else if (!isValidEmail(emailInput.value)) {
-        isValid = false;
-        errorMessage = '请输入有效的邮箱地址';
-        highlightError(emailInput);
-      } else if (!messageInput.value.trim()) {
-        isValid = false;
-        errorMessage = '请输入您的留言';
-        highlightError(messageInput);
-      }
-      
-      if (isValid) {
-        // 模拟表单提交
-        const submitBtn = document.querySelector('.submit-btn');
-        const originalText = submitBtn.textContent;
-        
-        submitBtn.disabled = true;
-        submitBtn.textContent = '发送中...';
-        
-        setTimeout(() => {
-          submitBtn.textContent = '发送成功！';
-          submitBtn.style.backgroundColor = 'var(--neon-green)';
-          submitBtn.style.color = 'var(--dark-bg)';
-          
-          // 重置表单
-          contactForm.reset();
-          
-          // 恢复按钮状态
-          setTimeout(() => {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-            submitBtn.style.backgroundColor = '';
-            submitBtn.style.color = '';
-          }, 3000);
-        }, 1500);
-      } else {
-        // 显示错误消息
-        showErrorMessage(errorMessage);
-      }
-    });
-  }
-
   // 添加粒子效果
   createParticles();
 
   // 添加打字机效果
   typeWriterEffect();
 });
-
-// 邮箱验证函数
-function isValidEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-}
-
-// 高亮错误输入框
-function highlightError(input) {
-  input.style.borderColor = 'red';
-  input.style.boxShadow = '0 0 10px red';
-  
-  setTimeout(() => {
-    input.style.borderColor = '';
-    input.style.boxShadow = '';
-  }, 2000);
-}
-
-// 显示错误消息
-function showErrorMessage(message) {
-  // 检查是否已存在错误消息元素
-  let errorElement = document.querySelector('.error-message');
-  
-  if (!errorElement) {
-    errorElement = document.createElement('div');
-    errorElement.className = 'error-message';
-    errorElement.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background-color: rgba(255, 0, 0, 0.8);
-      color: white;
-      padding: 15px 20px;
-      border-radius: 5px;
-      z-index: 1000;
-      font-family: 'Courier New', monospace;
-      box-shadow: 0 0 15px red;
-      animation: slideIn 0.3s ease;
-    `;
-    
-    // 添加滑入动画
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes slideIn {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(errorElement);
-  }
-  
-  errorElement.textContent = message;
-  errorElement.style.display = 'block';
-  
-  setTimeout(() => {
-    errorElement.style.display = 'none';
-  }, 3000);
-}
 
 // 创建粒子效果
 function createParticles() {
