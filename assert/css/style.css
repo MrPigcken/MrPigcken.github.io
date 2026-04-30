@@ -11,6 +11,7 @@
   --light-bg: #1a1a30;
   --text-color: #ffffff;
   --text-secondary: #cccccc;
+  --neon-light-blue: #0066cc;
 }
 
 /* 浅色主题变量 */
@@ -25,6 +26,7 @@
   --light-bg: #f8f8ff;
   --text-color: #1a1a2e;
   --text-secondary: #333333;
+  --neon-light-blue: #00f3ff;
 }
 
 * {
@@ -929,4 +931,35 @@ footer::before {
   100% {
     clip: rect(56px, 9999px, 8px, 0);
   }
+}
+
+.err-title{
+  font-size: 4rem;
+  margin: auto;
+}
+
+.err-text{
+  font-size: 1.2rem;
+  margin: auto;
+  text-align:center;
+  font-family:sans-serif
+}
+
+.back-to-index{
+  font-size: 1rem;
+  margin: auto;
+  text-align:center;
+  font-family:sans-serif
+}
+
+.back-button{
+  font-size: 1rem;
+  background-color: var(--neon-light-blue);
+  color: var(--text-color);
+  bottom: 30px;
+  border-radius: 12.5px;
+  right: 30px;
+  width: 125px;
+  height: 55px;
+  border: 2px solid var(--text-color);
 }
