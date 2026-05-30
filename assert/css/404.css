@@ -1,0 +1,30 @@
+.err-title{
+  font-size: 4rem;
+  margin: auto;
+}
+
+.err-text{
+  font-size: 1.2rem;
+  margin: auto;
+  text-align:center;
+  font-family:sans-serif
+}
+
+.back-to-index{
+  font-size: 1rem;
+  margin: auto;
+  text-align:center;
+  font-family:sans-serif
+}
+
+.back-button{
+  font-size: 1rem;
+  background-color: var(--neon-light-blue);
+  color: var(--text-color);
+  bottom: 30px;
+  border-radius: 12.5px;
+  right: 30px;
+  width: 125px;
+  height: 55px;
+  border: 1px solid var(--text-color);
+}
