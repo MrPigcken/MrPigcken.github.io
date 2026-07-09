@@ -29,7 +29,7 @@ let drawMode = 'alive';
 let lastMouseX = 0;
 let lastMouseY = 0;
 
-// 图案放置状态
+// 图案放置状态（含旋转角度）
 let placingPattern = null;
 let mouseWorldX = 0;
 let mouseWorldY = 0;
@@ -63,13 +63,10 @@ let dirty = true;
 // 图案分类库
 let patternCategories = {};
 
-// ========== 规则查找表 LUT（经过验证） ==========
-// 9位邻域编码：bit0~2上一行左中右，bit3~5当前行左中右，bit6~8下一行左中右
-// bit4 为中心细胞
+// ========== 规则查找表 LUT ==========
 const ruleLUT = new Uint8Array(512);
 (function buildLUT() {
     for (let i = 0; i < 512; i++) {
-        // 统计9位中1的总数
         let count = 0;
         let n = i;
         while (n) { count += n & 1; n >>>= 1; }
@@ -77,7 +74,6 @@ const ruleLUT = new Uint8Array(512);
         const center = (i >>> 4) & 1;
         const neighbors = count - center;
         
-        // 标准生命游戏规则
         if (center) {
             ruleLUT[i] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
         } else {
@@ -86,7 +82,41 @@ const ruleLUT = new Uint8Array(512);
     }
 })();
 
-// ========== 工具函数 ==========
+// ========== 图案旋转工具函数 ==========
+// 顺时针旋转指定角度（90/180/270），返回归一化后的坐标数组
+function rotateCells(cells, angle) {
+    angle = ((angle % 360) + 360) % 360;
+    if (angle === 0) return cells.slice();
+    
+    let result = cells.map(([x, y]) => [x, y]);
+    const rotateTimes = angle / 90;
+    
+    for (let i = 0; i < rotateTimes; i++) {
+        // 计算当前包围盒
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+        result.forEach(([x, y]) => {
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+        });
+        const width = maxX - minX + 1;
+        
+        // 顺时针旋转90度：(x, y) → (y, width - 1 - x)
+        result = result.map(([x, y]) => [y, width - 1 - x]);
+    }
+    
+    // 归一化到左上角 (0,0)
+    let minX = Infinity, minY = Infinity;
+    result.forEach(([x, y]) => {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+    });
+    return result.map(([x, y]) => [x - minX, y - minY]);
+}
+
+// ========== 通用工具函数 ==========
 function clampStep(value, min, max, step) {
     value = Math.round(value / step) * step;
     return Math.max(min, Math.min(max, value));
@@ -111,8 +141,8 @@ async function loadPatterns() {
 
 // ========== 初始化网格 ==========
 function initGrid() {
-    stride = cols + 2; // 左右各1格边界
-    const totalCells = stride * (rows + 2); // 上下各1格边界
+    stride = cols + 2;
+    const totalCells = stride * (rows + 2);
     currentGrid = new Uint8Array(totalCells);
     nextGrid = new Uint8Array(totalCells);
     generation = 0;
@@ -222,10 +252,11 @@ function draw() {
         ? drawLargeCells(cellPixelSize, startWorldX, endWorldX, startWorldY, endWorldY)
         : drawSmallCells(cellPixelSize, startWorldX, endWorldX, startWorldY, endWorldY);
     
-    // 图案放置预览
+    // 图案放置预览（应用旋转）
     if (placingPattern) {
-        const pattern = getPatternData(placingPattern.category, placingPattern.id);
-        if (pattern) {
+        const rawPattern = getPatternData(placingPattern.category, placingPattern.id);
+        if (rawPattern) {
+            const pattern = rotateCells(rawPattern, placingPattern.rotation);
             const showGap = cellPixelSize >= 3;
             const cellDrawSize = showGap ? cellPixelSize - 1 : Math.max(1, cellPixelSize);
             const cellOffset = showGap ? 0.5 : 0;
@@ -352,8 +383,7 @@ function getPatternData(category, id) {
     return patternCategories[category]?.patterns?.[id]?.cells;
 }
 
-// ========== 演化核心（逻辑修正版） ==========
-// 采用行指针缓存 + LUT 查表，逐细胞准确计算，无滑动窗口bug
+// ========== 演化核心 ==========
 function nextGeneration() {
     let newAlive = 0;
     const strideVal = stride;
@@ -362,14 +392,12 @@ function nextGeneration() {
     const grid = currentGrid;
     const next = nextGrid;
     
-    // 三行起始指针，消除重复乘法
-    let upRow = 0;           // 上一行（边界行）
-    let midRow = strideVal;  // 当前行
-    let downRow = strideVal * 2; // 下一行
+    let upRow = 0;
+    let midRow = strideVal;
+    let downRow = strideVal * 2;
     
     for (let y = 1; y <= rows; y++) {
         for (let x = 1; x <= colCount; x++) {
-            // 按位拼接 3x3 邻域 9 位状态
             const lutIdx = 
                 (grid[upRow + x - 1] << 0) |
                 (grid[upRow + x]     << 1) |
@@ -386,13 +414,11 @@ function nextGeneration() {
             newAlive += alive;
         }
         
-        // 三行指针整体下移
         upRow = midRow;
         midRow = downRow;
         downRow += strideVal;
     }
     
-    // 交换双缓冲
     currentGrid = next;
     nextGrid = grid;
     aliveCount = newAlive;
@@ -426,11 +452,9 @@ function applyBrush(worldX, worldY, mode) {
         const idxStart = rowBase + xMin;
         const idxEnd = rowBase + xMax;
 
-        // 统计原有活细胞数
         let rowSum = 0;
         for (let i = idxStart; i < idxEnd; i++) rowSum += currentGrid[i];
 
-        // 原生批量填充
         currentGrid.fill(newVal, idxStart, idxEnd);
 
         delta += newVal ? width - rowSum : -rowSum;
@@ -440,9 +464,11 @@ function applyBrush(worldX, worldY, mode) {
     dirty = true;
 }
 
+// 放置图案（应用当前旋转角度）
 function placePatternAt(category, patternId, worldX, worldY) {
-    const pattern = getPatternData(category, patternId);
-    if (!pattern) return;
+    const rawPattern = getPatternData(category, patternId);
+    if (!rawPattern) return;
+    const pattern = rotateCells(rawPattern, placingPattern.rotation);
     
     let minX = Infinity, maxX = -Infinity;
     let minY = Infinity, maxY = -Infinity;
@@ -499,7 +525,7 @@ function extractPatternFromSelection() {
 // ========== 模式控制 ==========
 function enterPlaceMode(category, patternId) {
     exitSelectMode();
-    placingPattern = { category, id: patternId };
+    placingPattern = { category, id: patternId, rotation: 0 };
     canvas.classList.add('placing');
     placeHint.style.display = 'block';
     
@@ -721,6 +747,22 @@ canvas.addEventListener('wheel', (e) => {
 
 // ========== 键盘快捷键 ==========
 document.addEventListener('keydown', (e) => {
+    // 放置模式下的旋转控制
+    if (placingPattern) {
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            placingPattern.rotation = (placingPattern.rotation - 90 + 360) % 360;
+            dirty = true;
+            return;
+        }
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            placingPattern.rotation = (placingPattern.rotation + 90) % 360;
+            dirty = true;
+            return;
+        }
+    }
+
     if (e.key === 'Escape') {
         if (isSelecting) exitSelectMode();
         if (placingPattern) exitPlaceMode();
