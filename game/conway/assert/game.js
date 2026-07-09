@@ -15,7 +15,7 @@ let offsetX = 0;
 let offsetY = 0;
 
 // 工具状态
-let currentTool = 'brush'; // brush: 画笔, eraser: 橡皮擦
+let currentTool = 'brush';
 let brushSize = 1;
 let isDrawing = false;
 let isPanning = false;
@@ -51,102 +51,54 @@ let frameCount = 0;
 let fps = 0;
 let lastFpsUpdate = 0;
 
-// ========== 原版图案分类库 ==========
-const patternCategories = {
-    stillLifes: {
-        name: '静物',
-        patterns: {
-            block: { name: '方块', data: [[0,0],[0,1],[1,0],[1,1]] },
-            beehive: { name: '蜂箱', data: [[1,0],[2,0],[0,1],[3,1],[1,2],[2,2]] },
-            loaf: { name: '面包', data: [[1,0],[2,0],[0,1],[3,1],[1,2],[3,2],[2,3]] },
-            boat: { name: '小船', data: [[0,0],[1,0],[0,1],[2,1],[1,2]] },
-            tub: { name: '浴缸', data: [[1,0],[0,1],[2,1],[1,2]] },
-            beacon: { name: '信标', data: [[0,0],[0,1],[1,0],[1,1],[2,2],[2,3],[3,2],[3,3]] }
+// 脏标记
+let dirty = true;
+
+// 图案分类库（从JSON加载）
+let patternCategories = {};
+
+// ========== 规则查找表 ==========
+const ruleLUT = new Uint8Array(512);
+(function buildLUT() {
+    for (let i = 0; i < 512; i++) {
+        let count = 0;
+        let n = i;
+        while (n) { count += n & 1; n >>>= 1; }
+        
+        const center = (i >>> 4) & 1;
+        const neighbors = count - center;
+        
+        if (center) {
+            ruleLUT[i] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
+        } else {
+            ruleLUT[i] = (neighbors === 3) ? 1 : 0;
         }
-    },
-    oscillators: {
-        name: '振荡器',
-        patterns: {
-            blinker: { name: '闪烁器', data: [[0,1],[1,1],[2,1]] },
-            toad: { name: '蟾蜍', data: [[1,0],[2,0],[3,0],[0,1],[1,1],[2,1]] },
-            pulsar: { 
-                name: '脉冲星', 
-                data: [
-                    [2,0],[3,0],[4,0],[8,0],[9,0],[10,0],
-                    [0,2],[5,2],[7,2],[12,2],
-                    [0,3],[5,3],[7,3],[12,3],
-                    [0,4],[5,4],[7,4],[12,4],
-                    [2,5],[3,5],[4,5],[8,5],[9,5],[10,5],
-                    [2,7],[3,7],[4,7],[8,7],[9,7],[10,7],
-                    [0,8],[5,8],[7,8],[12,8],
-                    [0,9],[5,9],[7,9],[12,9],
-                    [0,10],[5,10],[7,10],[12,10],
-                    [2,12],[3,12],[4,12],[8,12],[9,12],[10,12]
-                ]
-            },
-            pentadecathlon: {
-                name: '十五项全能',
-                data: [
-                    [1,0],[2,0],[3,0],[0,1],[4,1],[1,2],[2,2],[3,2],
-                    [1,4],[2,4],[3,4],[0,5],[4,5],[1,6],[2,6],[3,6]
-                ]
-            }
-        }
-    },
-    spaceships: {
-        name: '飞船',
-        patterns: {
-            glider: { name: '滑翔机', data: [[0,1],[1,2],[2,0],[2,1],[2,2]] },
-            lightweightSpaceship: { 
-                name: '轻型飞船', 
-                data: [[1,0],[4,0],[0,1],[0,2],[4,2],[0,3],[1,3],[2,3],[3,3]]
-            },
-            middleweightSpaceship: {
-                name: '中型飞船',
-                data: [[2,0],[3,0],[1,1],[4,1],[0,2],[0,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]]
-            },
-            heavyweightSpaceship: {
-                name: '重型飞船',
-                data: [[2,0],[3,0],[1,1],[4,1],[0,2],[0,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]]
-            }
-        }
-    },
-    guns: {
-        name: '枪与生成器',
-        patterns: {
-            gliderGun: {
-                name: '高斯珀滑翔机枪',
-                data: [
-                    [24,0],[22,1],[24,1],[12,2],[13,2],[20,2],[21,2],[34,2],[35,2],
-                    [11,3],[15,3],[20,3],[21,3],[34,3],[35,3],[0,4],[1,4],[10,4],
-                    [16,4],[20,4],[21,4],[0,5],[1,5],[10,5],[14,5],[16,5],[17,5],
-                    [22,5],[24,5],[10,6],[16,6],[24,6],[11,7],[15,7],[12,8],[13,8]
-                ]
-            },
-            blockLayer: {
-                name: '方块生成器',
-                data: [
-                    [0,1],[1,1],[2,1],[4,1],[5,1],[6,1],
-                    [2,0],[2,2],[4,0],[4,2],
-                    [2,4],[2,5],[4,4],[4,5],
-                    [0,4],[1,4],[6,4],[5,4]
-                ]
-            }
-        }
-    },
-    methuselahs: {
-        name: '长寿型',
-        patterns: {
-            rPentomino: { name: 'R五联体', data: [[1,0],[2,0],[0,1],[1,1],[1,2]] },
-            diehard: { name: '顽固生命', data: [[0,1],[1,1],[1,2],[5,0],[6,0],[6,1],[6,2]] },
-            acorn: { name: '橡果', data: [[1,0],[2,1],[0,2],[1,2],[4,2],[5,2],[6,2]] }
-        }
-    },
-    custom: {
-        name: '自定义',
-        patterns: {}
     }
-};
+})();
+
+// ========== 加载图案库 ==========
+async function loadPatterns() {
+    try {
+        const response = await fetch('../data/data.json');
+        if (!response.ok) throw new Error('图案文件加载失败');
+        patternCategories = await response.json();
+        
+        // 确保自定义分类存在
+        if (!patternCategories.custom) {
+            patternCategories.custom = { name: '自定义', patterns: {} };
+        }
+        
+        // 合并本地存储的自定义图案
+        loadCustomPatterns();
+    } catch (error) {
+        console.error('加载图案库失败:', error);
+        // 降级：保留最小分类结构
+        patternCategories = {
+            custom: { name: '自定义', patterns: {} }
+        };
+        loadCustomPatterns();
+    }
+}
 
 // ========== 初始化 ==========
 function initGrid() {
@@ -158,37 +110,38 @@ function initGrid() {
     aliveCount = 0;
     fitToViewport();
     updateInfo();
-    loadCustomPatterns();
     renderPatternButtons();
+    dirty = true;
     draw();
 }
 
-// 加载本地存储的自定义图案
 function loadCustomPatterns() {
     try {
         const saved = localStorage.getItem('gol_custom_patterns');
-        if (saved) {
+        if (saved && patternCategories.custom) {
             patternCategories.custom.patterns = JSON.parse(saved);
         }
     } catch (e) {
-        patternCategories.custom.patterns = {};
+        if (patternCategories.custom) {
+            patternCategories.custom.patterns = {};
+        }
     }
 }
 
-// 保存自定义图案到本地存储
 function saveCustomPatterns() {
     try {
-        localStorage.setItem('gol_custom_patterns', JSON.stringify(patternCategories.custom.patterns));
+        if (patternCategories.custom) {
+            localStorage.setItem('gol_custom_patterns', JSON.stringify(patternCategories.custom.patterns));
+        }
     } catch (e) {
         console.warn('本地存储失败');
     }
 }
 
-// 渲染当前分类的图案按钮
 function renderPatternButtons() {
     presetContainer.innerHTML = '';
     const category = patternCategories[currentCategory];
-    if (!category) return;
+    if (!category || !category.patterns) return;
 
     Object.entries(category.patterns).forEach(([id, pattern]) => {
         const btn = document.createElement('button');
@@ -206,7 +159,6 @@ function renderPatternButtons() {
             }
         });
 
-        // 右键删除自定义图案
         if (currentCategory === 'custom') {
             btn.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
@@ -250,6 +202,9 @@ function screenToWorld(sx, sy) {
 
 // ========== 绘制 ==========
 function draw() {
+    if (!dirty) return;
+    dirty = false;
+
     const cellPixelSize = baseCellSize * scale;
     
     ctx.fillStyle = '#020617';
@@ -260,61 +215,51 @@ function draw() {
     const startWorldY = Math.max(0, Math.floor(-offsetY / cellPixelSize));
     const endWorldY = Math.min(rows, Math.ceil((VIEW_HEIGHT - offsetY) / cellPixelSize));
 
-    const showGap = cellPixelSize >= 3;
-    const cellDrawSize = showGap ? cellPixelSize - 1 : Math.max(1, cellPixelSize);
-    const cellOffset = showGap ? 0.5 : 0;
+    if (cellPixelSize >= 2) {
+        drawLargeCells(cellPixelSize, startWorldX, endWorldX, startWorldY, endWorldY);
+    } else {
+        drawSmallCells(cellPixelSize, startWorldX, endWorldX, startWorldY, endWorldY);
+    }
+    
+    // 放置预览
+    if (placingPattern) {
+        const pattern = getPatternData(placingPattern.category, placingPattern.id);
+        if (pattern) {
+            const showGap = cellPixelSize >= 3;
+            const cellDrawSize = showGap ? cellPixelSize - 1 : Math.max(1, cellPixelSize);
+            const cellOffset = showGap ? 0.5 : 0;
 
-    // 绘制细胞
-    const cellPath = new Path2D();
-    for (let wy = startWorldY; wy < endWorldY; wy++) {
-        const rowIdx = (wy + 1) * stride;
-        for (let wx = startWorldX; wx < endWorldX; wx++) {
-            if (currentGrid[rowIdx + wx + 1]) {
-                const sx = Math.floor(wx * cellPixelSize + offsetX + cellOffset);
-                const sy = Math.floor(wy * cellPixelSize + offsetY + cellOffset);
-                cellPath.rect(sx, sy, cellDrawSize, cellDrawSize);
-            }
+            const previewPath = new Path2D();
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            pattern.forEach(([x, y]) => {
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            });
+            const patternW = maxX - minX + 1;
+            const patternH = maxY - minY + 1;
+            const offX = mouseWorldX - Math.floor(patternW / 2) - minX;
+            const offY = mouseWorldY - Math.floor(patternH / 2) - minY;
+            
+            pattern.forEach(([x, y]) => {
+                const px = x + offX;
+                const py = y + offY;
+                if (px >= 0 && px < cols && py >= 0 && py < rows) {
+                    const sx = Math.floor(px * cellPixelSize + offsetX + cellOffset);
+                    const sy = Math.floor(py * cellPixelSize + offsetY + cellOffset);
+                    previewPath.rect(sx, sy, cellDrawSize, cellDrawSize);
+                }
+            });
+            
+            ctx.fillStyle = 'rgba(124, 58, 237, 0.6)';
+            ctx.fill(previewPath);
         }
     }
-    ctx.fillStyle = '#0ea5e9';
-    ctx.fill(cellPath);
-    
-    // 绘制放置预览
-    if (placingPattern) {
-        const previewPath = new Path2D();
-        const pattern = getPatternData(placingPattern.category, placingPattern.id);
-        if (!pattern) return;
-        
-        let minX = Infinity, maxX = -Infinity;
-        let minY = Infinity, maxY = -Infinity;
-        pattern.forEach(([x, y]) => {
-            minX = Math.min(minX, x);
-            maxX = Math.max(maxX, x);
-            minY = Math.min(minY, y);
-            maxY = Math.max(maxY, y);
-        });
-        const patternW = maxX - minX + 1;
-        const patternH = maxY - minY + 1;
-        const offX = mouseWorldX - Math.floor(patternW / 2) - minX;
-        const offY = mouseWorldY - Math.floor(patternH / 2) - minY;
-        
-        pattern.forEach(([x, y]) => {
-            const px = x + offX;
-            const py = y + offY;
-            if (px >= 0 && px < cols && py >= 0 && py < rows) {
-                const sx = Math.floor(px * cellPixelSize + offsetX + cellOffset);
-                const sy = Math.floor(py * cellPixelSize + offsetY + cellOffset);
-                previewPath.rect(sx, sy, cellDrawSize, cellDrawSize);
-            }
-        });
-        
-        ctx.fillStyle = 'rgba(124, 58, 237, 0.6)';
-        ctx.fill(previewPath);
-    }
 
-    // 绘制选区框
+    // 选区框
     if (isSelecting && selectStart && selectEnd) {
-        const cellPixelSize = baseCellSize * scale;
         const x1 = Math.min(selectStart.x, selectEnd.x);
         const y1 = Math.min(selectStart.y, selectEnd.y);
         const x2 = Math.max(selectStart.x, selectEnd.x) + 1;
@@ -353,48 +298,97 @@ function draw() {
     }
 }
 
-// 获取图案数据
-function getPatternData(category, id) {
-    return patternCategories[category]?.patterns[id]?.data;
+function drawLargeCells(cellPixelSize, startX, endX, startY, endY) {
+    const cellSize = cellPixelSize - 1;
+    const cellOffset = 0.5;
+    const cellPath = new Path2D();
+
+    for (let wy = startY; wy < endY; wy++) {
+        const rowIdx = (wy + 1) * stride;
+        const sy = Math.floor(wy * cellPixelSize + offsetY + cellOffset);
+        for (let wx = startX; wx < endX; wx++) {
+            if (currentGrid[rowIdx + wx + 1]) {
+                const sx = Math.floor(wx * cellPixelSize + offsetX + cellOffset);
+                cellPath.rect(sx, sy, cellSize, cellSize);
+            }
+        }
+    }
+    ctx.fillStyle = '#0ea5e9';
+    ctx.fill(cellPath);
 }
 
-// ========== 演化逻辑 ==========
+function drawSmallCells(cellPixelSize, startX, endX, startY, endY) {
+    const imgData = ctx.getImageData(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    const data = imgData.data;
+    const pixelStep = Math.max(1, Math.round(cellPixelSize));
+    const r = 14, g = 165, b = 233, a = 255;
+
+    for (let wy = startY; wy < endY; wy++) {
+        const rowIdx = (wy + 1) * stride;
+        const screenY = Math.floor(wy * cellPixelSize + offsetY);
+        if (screenY < 0 || screenY >= VIEW_HEIGHT) continue;
+
+        for (let wx = startX; wx < endX; wx++) {
+            if (currentGrid[rowIdx + wx + 1]) {
+                const screenX = Math.floor(wx * cellPixelSize + offsetX);
+                if (screenX < 0 || screenX >= VIEW_WIDTH) continue;
+
+                for (let dy = 0; dy < pixelStep && screenY + dy < VIEW_HEIGHT; dy++) {
+                    const rowOffset = ((screenY + dy) * VIEW_WIDTH + screenX) * 4;
+                    for (let dx = 0; dx < pixelStep && screenX + dx < VIEW_WIDTH; dx++) {
+                        const idx = rowOffset + dx * 4;
+                        data[idx] = r;
+                        data[idx + 1] = g;
+                        data[idx + 2] = b;
+                        data[idx + 3] = a;
+                    }
+                }
+            }
+        }
+    }
+    ctx.putImageData(imgData, 0, 0);
+}
+
+function getPatternData(category, id) {
+    return patternCategories[category]?.patterns?.[id]?.cells;
+}
+
+// ========== 演化 ==========
 function nextGeneration() {
     let newAlive = 0;
+    const strideVal = stride;
+    
+    let upRow = 0;
+    let midRow = strideVal;
+    let downRow = strideVal * 2;
     
     for (let y = 1; y <= rows; y++) {
-        const rowIdx = y * stride;
-        const upRow = rowIdx - stride;
-        const downRow = rowIdx + stride;
-        
         for (let x = 1; x <= cols; x++) {
-            const idx = rowIdx + x;
-            const neighbors = 
-                currentGrid[upRow + x - 1] +
-                currentGrid[upRow + x] +
-                currentGrid[upRow + x + 1] +
-                currentGrid[idx - 1] +
-                currentGrid[idx + 1] +
-                currentGrid[downRow + x - 1] +
-                currentGrid[downRow + x] +
-                currentGrid[downRow + x + 1];
+            const lutIdx = 
+                (currentGrid[upRow + x - 1] << 0) |
+                (currentGrid[upRow + x]     << 1) |
+                (currentGrid[upRow + x + 1] << 2) |
+                (currentGrid[midRow + x - 1] << 3) |
+                (currentGrid[midRow + x]     << 4) |
+                (currentGrid[midRow + x + 1] << 5) |
+                (currentGrid[downRow + x - 1] << 6) |
+                (currentGrid[downRow + x]     << 7) |
+                (currentGrid[downRow + x + 1] << 8);
             
-            let alive = 0;
-            if (currentGrid[idx]) {
-                alive = (neighbors === 2 || neighbors === 3) ? 1 : 0;
-            } else {
-                alive = (neighbors === 3) ? 1 : 0;
-            }
-            
-            nextGrid[idx] = alive;
+            const alive = ruleLUT[lutIdx];
+            nextGrid[midRow + x] = alive;
             newAlive += alive;
         }
+        upRow = midRow;
+        midRow = downRow;
+        downRow += strideVal;
     }
     
     [currentGrid, nextGrid] = [nextGrid, currentGrid];
     aliveCount = newAlive;
     generation++;
     updateInfo();
+    dirty = true;
 }
 
 // ========== 笔刷与橡皮擦 ==========
@@ -419,6 +413,7 @@ function applyBrush(worldX, worldY, mode) {
             }
         }
     }
+    dirty = true;
 }
 
 function placePatternAt(category, patternId, worldX, worldY) {
@@ -451,9 +446,9 @@ function placePatternAt(category, patternId, worldX, worldY) {
     });
     
     updateInfo();
+    dirty = true;
 }
 
-// 从选区提取图案
 function extractPatternFromSelection() {
     if (!selectStart || !selectEnd) return null;
 
@@ -462,21 +457,21 @@ function extractPatternFromSelection() {
     const x2 = Math.min(cols - 1, Math.max(selectStart.x, selectEnd.x));
     const y2 = Math.min(rows - 1, Math.max(selectStart.y, selectEnd.y));
 
-    const data = [];
+    const cells = [];
     for (let y = y1; y <= y2; y++) {
         for (let x = x1; x <= x2; x++) {
             const idx = (y + 1) * stride + (x + 1);
             if (currentGrid[idx]) {
-                data.push([x - x1, y - y1]);
+                cells.push([x - x1, y - y1]);
             }
         }
     }
 
-    if (data.length === 0) {
+    if (cells.length === 0) {
         alert('选区内没有存活细胞');
         return null;
     }
-    return data;
+    return cells;
 }
 
 // ========== 模式控制 ==========
@@ -491,6 +486,7 @@ function enterPlaceMode(category, patternId) {
             btn.dataset.patternId === patternId && btn.dataset.category === category
         );
     });
+    dirty = true;
 }
 
 function exitPlaceMode() {
@@ -498,7 +494,7 @@ function exitPlaceMode() {
     canvas.classList.remove('placing');
     placeHint.style.display = 'none';
     document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-    draw();
+    dirty = true;
 }
 
 function enterSelectMode() {
@@ -518,10 +514,9 @@ function exitSelectMode() {
     canvas.classList.remove('selecting');
     selectHint.style.display = 'none';
     document.getElementById('saveCustomBtn').classList.remove('active');
-    draw();
+    dirty = true;
 }
 
-// 切换橡皮擦工具
 function toggleEraser() {
     if (currentTool === 'eraser') {
         currentTool = 'brush';
@@ -557,9 +552,12 @@ function gameLoop(timestamp) {
         const interval = 1000 / speed;
         if (timestamp - lastTime >= interval) {
             nextGeneration();
-            draw();
             lastTime = timestamp;
         }
+    }
+
+    if (dirty) {
+        draw();
     }
 
     requestAnimationFrame(gameLoop);
@@ -573,22 +571,20 @@ canvas.addEventListener('mousedown', (e) => {
     const mouseY = e.clientY - rect.top;
     const pos = screenToWorld(mouseX, mouseY);
     
-    // 选区模式
     if (isSelecting) {
         if (e.button === 0) {
             selectStart = pos;
             selectEnd = pos;
+            dirty = true;
         } else if (e.button === 2) {
             exitSelectMode();
         }
         return;
     }
 
-    // 放置模式
     if (placingPattern) {
         if (e.button === 0) {
             placePatternAt(placingPattern.category, placingPattern.id, pos.x, pos.y);
-            draw();
         } else if (e.button === 2) {
             exitPlaceMode();
         }
@@ -601,18 +597,14 @@ canvas.addEventListener('mousedown', (e) => {
         lastMouseY = e.clientY;
         canvas.style.cursor = 'grabbing';
     } else if (e.button === 0) {
-        // 左键根据当前工具决定绘制/擦除
         isDrawing = true;
         drawMode = currentTool === 'eraser' ? 'dead' : 'alive';
         applyBrush(pos.x, pos.y, drawMode);
-        draw();
         updateInfo();
     } else if (e.button === 2) {
-        // 右键临时擦除，不改变当前工具
         isDrawing = true;
         drawMode = 'dead';
         applyBrush(pos.x, pos.y, 'dead');
-        draw();
         updateInfo();
     }
 });
@@ -625,14 +617,14 @@ canvas.addEventListener('mousemove', (e) => {
     
     if (isSelecting && selectStart) {
         selectEnd = pos;
-        draw();
+        dirty = true;
         return;
     }
     
     if (placingPattern) {
         mouseWorldX = pos.x;
         mouseWorldY = pos.y;
-        draw();
+        dirty = true;
         return;
     }
     
@@ -641,16 +633,14 @@ canvas.addEventListener('mousemove', (e) => {
         offsetY += e.clientY - lastMouseY;
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
-        draw();
+        dirty = true;
     } else if (isDrawing) {
         applyBrush(pos.x, pos.y, drawMode);
-        draw();
         updateInfo();
     }
 });
 
 canvas.addEventListener('mouseup', (e) => {
-    // 选区结束，保存图案
     if (isSelecting && selectStart && selectEnd && e.button === 0) {
         const patternData = extractPatternFromSelection();
         if (patternData) {
@@ -659,7 +649,7 @@ canvas.addEventListener('mouseup', (e) => {
                 const id = 'custom_' + Date.now();
                 patternCategories.custom.patterns[id] = {
                     name: name.trim(),
-                    data: patternData
+                    cells: patternData
                 };
                 saveCustomPatterns();
                 currentCategory = 'custom';
@@ -689,7 +679,6 @@ canvas.addEventListener('mouseleave', () => {
 
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
-// 滚轮缩放
 canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
@@ -707,16 +696,14 @@ canvas.addEventListener('wheel', (e) => {
     offsetX = mouseX - worldBefore.x * cellPixelSize;
     offsetY = mouseY - worldBefore.y * cellPixelSize;
     
-    draw();
+    dirty = true;
 }, { passive: false });
 
-// 键盘事件
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (isSelecting) exitSelectMode();
         if (placingPattern) exitPlaceMode();
     }
-    // 快捷键 E 切换橡皮擦
     if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey) {
         toggleEraser();
     }
@@ -728,11 +715,12 @@ document.getElementById('startBtn').addEventListener('click', function() {
     this.textContent = isRunning ? '暂停' : '开始';
     this.classList.toggle('active', isRunning);
     lastTime = performance.now();
+    dirty = true;
 });
 
 document.getElementById('stepBtn').addEventListener('click', () => {
     nextGeneration();
-    draw();
+    dirty = true;
 });
 
 document.getElementById('clearBtn').addEventListener('click', () => {
@@ -751,7 +739,7 @@ document.getElementById('randomBtn').addEventListener('click', () => {
     }
     generation = 0;
     updateInfo();
-    draw();
+    dirty = true;
 });
 
 eraserBtn.addEventListener('click', toggleEraser);
@@ -791,6 +779,9 @@ document.getElementById('saveCustomBtn').addEventListener('click', function() {
     }
 });
 
-// 启动游戏
-initGrid();
-requestAnimationFrame(gameLoop);
+// ========== 启动 ==========
+(async function main() {
+    await loadPatterns();
+    initGrid();
+    requestAnimationFrame(gameLoop);
+})();
