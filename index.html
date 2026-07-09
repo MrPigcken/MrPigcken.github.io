@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./assert/image/avatar.png">
+    <link rel="stylesheet" href="./assert/css/style.css">
+    <title>github</title>
+    <script>
+        const titles=["Hello","I'm MrPigcken", "杨癫发骁","欢迎"];
+        let index=0;
+        let timer;
+        function autoTitle() {
+            timer=setInterval(() => {
+                index=(index + 1) % titles.length;
+                document.title = titles[index];
+            }, 1000);
+        }
+        autoTitle();
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearInterval(timer);
+                document.title = "%（*%&￥&%（*……）&￥*&%&￥*&%￥*……（*";
+            } else {
+                autoTitle();
+            }
+        })
+    </script>
+</head>
+<body>
+    <button class="game_conway_link">
+        <a href="./game/conway">hello</a>
+    </button>
+</body>
+</html>

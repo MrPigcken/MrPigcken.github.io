@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>康威生命游戏 - 高性能版</title>
+    <link rel="stylesheet" href="./assert/style.css">
+</head>
+<body>
+    <h1>康威生命游戏</h1>
+
+    <div class="info-bar">
+        <div class="info-item">世代: <span id="generation">0</span></div>
+        <div class="info-item">存活细胞: <span id="aliveCount">0</span></div>
+        <div class="info-item">帧率: <span id="fps">0</span></div>
+        <div class="info-item">网格尺寸: <span id="canvasSizeLabel">1024 × 1024</span></div>
+    </div>
+
+    <div class="controls">
+        <button id="startBtn" class="primary">开始</button>
+        <button id="stepBtn">单步</button>
+        <button id="clearBtn">全部清除</button>
+        <button id="randomBtn">随机生成</button>
+        <button id="eraserBtn">橡皮擦</button>
+
+        <div class="slider-group">
+            <label>速度</label>
+            <input type="range" id="speedSlider" min="1" max="60" value="10">
+        </div>
+
+        <div class="slider-group">
+            <label>笔刷/橡皮大小</label>
+            <input type="range" id="brushSlider" min="1" max="20" value="1">
+        </div>
+
+        <div class="slider-group">
+            <label>网格尺寸</label>
+            <input type="range" id="canvasSizeSlider" min="128" max="8192" step="128" value="1024">
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <div class="place-hint" id="placeHint">点击画布放置图案 · 右键/ESC取消</div>
+        <div class="select-hint" id="selectHint">拖动鼠标选择区域 · 右键/ESC取消</div>
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
+    </div>
+
+    <div class="pattern-section">
+        <div class="pattern-tabs">
+            <button class="tab-btn active" data-category="stillLifes">静物</button>
+            <button class="tab-btn" data-category="oscillators">振荡器</button>
+            <button class="tab-btn" data-category="spaceships">飞船</button>
+            <button class="tab-btn" data-category="guns">枪与生成器</button>
+            <button class="tab-btn" data-category="methuselahs">长寿型</button>
+            <button class="tab-btn" data-category="custom">自定义</button>
+        </div>
+        <div class="presets" id="presetContainer"></div>
+        <div class="custom-actions">
+            <button id="saveCustomBtn" class="custom-btn">框选保存自定义图案</button>
+            <span class="custom-tip">右键自定义图案可删除</span>
+        </div>
+    </div>
+
+    <div class="rules">
+        <p><strong>游戏规则：</strong>存活细胞周围有 2 或 3 个存活邻居则继续存活；死亡细胞周围恰好有 3 个存活邻居则复活；其余情况细胞死亡。边界为封闭模式，细胞出界直接消失。</p>
+        <p><strong>操作说明：</strong>左键绘制/擦除细胞（点击橡皮擦切换模式），右键临时擦除，按住鼠标中键拖动平移画布，滚轮缩放视图。点击图案按钮后可在画布放置，支持框选保存自定义图案。</p>
+    </div>
+
+    <script src="./assert/game.js"></script>
+</body>
+</html>

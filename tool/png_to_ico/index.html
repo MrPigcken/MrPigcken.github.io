@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="./MrPigcken.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片转 ICO 工具 | 支持裁剪、圆角、多格式</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>图片转 ICO 工具（支持裁剪 + 圆角 + 多格式）</h1>
+
+    <!-- 上传区域 -->
+    <div class="card">
+        <div class="upload-area" id="uploadArea">
+            <p>点击或拖拽图片到此处上传</p>
+            <p class="tip">支持 PNG、JPG、WebP、BMP 等常见图片格式，最大支持 4096px 尺寸输出</p>
+            <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp, image/bmp">
+        </div>
+    </div>
+
+    <!-- 裁剪区域 -->
+    <div class="card" id="cropCard" style="display: none;">
+        <h3 style="margin-bottom: 16px;">裁剪区域</h3>
+        <div class="crop-container">
+            <canvas id="cropCanvas"></canvas>
+        </div>
+        <p class="crop-tip">拖动方框移动裁剪区域，拖动四角调整大小（保持正方形）</p>
+    </div>
+
+    <!-- 参数控制 -->
+    <div class="card">
+        <div class="control-row">
+            <label>圆角率</label>
+            <input type="range" id="radiusRange" min="0" max="50" value="0" step="1">
+            <span class="value-text" id="radiusValue">0%</span>
+        </div>
+
+        <div class="control-row" style="align-items: flex-start;">
+            <label>图标尺寸</label>
+            <div style="flex: 1;">
+                <div class="size-list" id="sizeList"></div>
+                <div class="add-size">
+                    <input type="number" id="sizeInput" value="32" min="1" max="4096">
+                    <span>px</span>
+                    <button class="btn btn-primary" id="addSizeBtn">添加尺寸</button>
+                </div>
+                <p class="tip">尺寸范围 1 ~ 4096 像素，推荐标准尺寸：16、32、48、64、128、256、512、1024</p>
+            </div>
+        </div>
+
+        <div class="control-row">
+            <label>导出文件名</label>
+            <input type="text" id="fileNameInput" value="icon" style="flex: 1; max-width: 300px; padding: 6px 8px; border: 1px solid #dcdfe6; border-radius: 4px;">
+            <span class="value-text">.ico</span>
+        </div>
+    </div>
+
+    <!-- 预览区域 -->
+    <div class="card">
+        <h3 style="margin-bottom: 16px;">效果预览</h3>
+        <div class="preview-grid" id="previewArea">
+            <p class="tip">上传图片后显示预览</p>
+        </div>
+    </div>
+
+    <!-- 生成按钮 -->
+    <div class="card" style="text-align: center;">
+        <button class="btn btn-success" id="generateBtn" style="padding: 12px 32px; font-size: 16px;" disabled>
+            生成并下载 ICO 文件
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

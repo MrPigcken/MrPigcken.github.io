@@ -1,0 +1,249 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.info-bar {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #94a3b8;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.info-item span {
+    color: #38bdf8;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+    justify-content: center;
+}
+
+button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #1e293b;
+    color: #e2e8f0;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #334155;
+}
+
+button:hover {
+    background: #334155;
+    border-color: #475569;
+}
+
+button.primary {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    border: none;
+}
+
+button.primary:hover {
+    filter: brightness(1.1);
+}
+
+button.active {
+    background: #059669;
+    border-color: #10b981;
+}
+
+button.eraser-active {
+    background: #dc2626;
+    border-color: #ef4444;
+}
+
+.slider-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    background: #1e293b;
+    border-radius: 6px;
+    border: 1px solid #334155;
+}
+
+.slider-group label {
+    font-size: 13px;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+input[type="range"] {
+    width: 120px;
+    accent-color: #38bdf8;
+}
+
+.canvas-container {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(56, 189, 248, 0.15);
+    border: 1px solid #334155;
+}
+
+canvas {
+    display: block;
+    background: #020617;
+    cursor: crosshair;
+}
+
+canvas.placing {
+    cursor: copy;
+}
+
+canvas.selecting {
+    cursor: crosshair;
+}
+
+canvas.eraser-mode {
+    cursor: cell;
+}
+
+.place-hint, .select-hint {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 10;
+    display: none;
+}
+
+.place-hint {
+    background: rgba(124, 58, 237, 0.9);
+}
+
+.select-hint {
+    background: rgba(245, 158, 11, 0.9);
+}
+
+/* 图案分类区 */
+.pattern-section {
+    margin-top: 16px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.pattern-tabs {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    background: #1e293b;
+    border-radius: 4px;
+    border: 1px solid #334155;
+}
+
+.tab-btn.active {
+    background: #0ea5e9;
+    border-color: #38bdf8;
+    color: white;
+}
+
+.presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    min-height: 36px;
+}
+
+.preset-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #1e293b;
+}
+
+.preset-btn.active {
+    background: #7c3aed;
+    border-color: #8b5cf6;
+}
+
+.preset-btn.custom-item {
+    border-color: #f59e0b;
+}
+
+.custom-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.custom-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    background: #b45309;
+    border-color: #d97706;
+}
+
+.custom-btn:hover {
+    background: #d97706;
+}
+
+.custom-btn.active {
+    background: #f59e0b;
+    border-color: #fbbf24;
+}
+
+.custom-tip {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.rules {
+    margin-top: 20px;
+    max-width: 700px;
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.rules strong {
+    color: #94a3b8;
+}
