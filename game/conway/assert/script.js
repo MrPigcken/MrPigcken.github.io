@@ -63,15 +63,26 @@ let dirty = true;
 // 图案分类库
 let patternCategories = {};
 
-// ========== 规则查找表 LUT ==========
+// ========== 规则查找表 LUT（经过验证） ==========
+// 9位邻域编码：bit0~2上一行左中右，bit3~5当前行左中右，bit6~8下一行左中右
+// bit4 为中心细胞
 const ruleLUT = new Uint8Array(512);
 (function buildLUT() {
     for (let i = 0; i < 512; i++) {
+        // 统计9位中1的总数
         let count = 0;
         let n = i;
         while (n) { count += n & 1; n >>>= 1; }
+        
         const center = (i >>> 4) & 1;
-        ruleLUT[i] = (center ? (count - center === 2 || count - center === 3) : count - center === 3) ? 1 : 0;
+        const neighbors = count - center;
+        
+        // 标准生命游戏规则
+        if (center) {
+            ruleLUT[i] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
+        } else {
+            ruleLUT[i] = (neighbors === 3) ? 1 : 0;
+        }
     }
 })();
 
@@ -98,10 +109,10 @@ async function loadPatterns() {
     }
 }
 
-// ========== 初始化 ==========
+// ========== 初始化网格 ==========
 function initGrid() {
-    stride = cols + 2;
-    const totalCells = stride * (rows + 2);
+    stride = cols + 2; // 左右各1格边界
+    const totalCells = stride * (rows + 2); // 上下各1格边界
     currentGrid = new Uint8Array(totalCells);
     nextGrid = new Uint8Array(totalCells);
     generation = 0;
@@ -168,7 +179,7 @@ function renderPatternButtons() {
     });
 }
 
-// ========== 视口与坐标 ==========
+// ========== 视口与坐标转换 ==========
 function fitToViewport() {
     const gridPixelW = cols * baseCellSize;
     const gridPixelH = rows * baseCellSize;
@@ -192,7 +203,7 @@ function screenToWorld(sx, sy) {
     };
 }
 
-// ========== 绘制（Uint32Array 优化版） ==========
+// ========== 绘制渲染 ==========
 function draw() {
     if (!dirty) return;
     dirty = false;
@@ -211,7 +222,7 @@ function draw() {
         ? drawLargeCells(cellPixelSize, startWorldX, endWorldX, startWorldY, endWorldY)
         : drawSmallCells(cellPixelSize, startWorldX, endWorldX, startWorldY, endWorldY);
     
-    // 放置预览
+    // 图案放置预览
     if (placingPattern) {
         const pattern = getPatternData(placingPattern.category, placingPattern.id);
         if (pattern) {
@@ -307,12 +318,12 @@ function drawLargeCells(cellPixelSize, startX, endX, startY, endY) {
     ctx.fill(cellPath);
 }
 
-// 小细胞渲染：Uint32Array 单像素批量写入，性能提升40%-70%
+// 小细胞渲染：Uint32Array 批量像素写入
 function drawSmallCells(cellPixelSize, startX, endX, startY, endY) {
     const imgData = ctx.getImageData(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
     const pixels = new Uint32Array(imgData.data.buffer);
     const pixelStep = Math.max(1, Math.round(cellPixelSize));
-    // 颜色 RGBA(14,165,233,255) 小端序对应 0xFFE9A50E
+    // RGBA(14,165,233,255) 小端序
     const CELL_COLOR = 0xFFE9A50E;
 
     for (let wy = startY; wy < endY; wy++) {
@@ -341,7 +352,8 @@ function getPatternData(category, id) {
     return patternCategories[category]?.patterns?.[id]?.cells;
 }
 
-// ========== 演化核心：滑动窗口 LUT 极致优化 ==========
+// ========== 演化核心（逻辑修正版） ==========
+// 采用行指针缓存 + LUT 查表，逐细胞准确计算，无滑动窗口bug
 function nextGeneration() {
     let newAlive = 0;
     const strideVal = stride;
@@ -349,48 +361,38 @@ function nextGeneration() {
     const lut = ruleLUT;
     const grid = currentGrid;
     const next = nextGrid;
-    const LUT_MASK = 0b011011011;
     
-    let upRow = 0;
-    let midRow = strideVal;
-    let downRow = strideVal * 2;
+    // 三行起始指针，消除重复乘法
+    let upRow = 0;           // 上一行（边界行）
+    let midRow = strideVal;  // 当前行
+    let downRow = strideVal * 2; // 下一行
     
     for (let y = 1; y <= rows; y++) {
-        // 首列初始化完整9位索引
-        let lutIdx = 
-            (grid[upRow]     << 0) |
-            (grid[upRow + 1] << 1) |
-            (grid[upRow + 2] << 2) |
-            (grid[midRow]     << 3) |
-            (grid[midRow + 1] << 4) |
-            (grid[midRow + 2] << 5) |
-            (grid[downRow]     << 6) |
-            (grid[downRow + 1] << 7) |
-            (grid[downRow + 2] << 8);
-        
-        let alive = lut[lutIdx];
-        next[midRow + 1] = alive;
-        newAlive += alive;
-        
-        // 滑动窗口遍历：每列仅读取3个新值
-        for (let x = 2; x <= colCount; x++) {
-            const xNext = x + 1;
-            // 左移清旧值，填入新的最右列
-            lutIdx = ((lutIdx << 1) & LUT_MASK) 
-                   | (grid[upRow + xNext] << 2) 
-                   | (grid[midRow + xNext] << 5) 
-                   | (grid[downRow + xNext] << 8);
+        for (let x = 1; x <= colCount; x++) {
+            // 按位拼接 3x3 邻域 9 位状态
+            const lutIdx = 
+                (grid[upRow + x - 1] << 0) |
+                (grid[upRow + x]     << 1) |
+                (grid[upRow + x + 1] << 2) |
+                (grid[midRow + x - 1] << 3) |
+                (grid[midRow + x]     << 4) |
+                (grid[midRow + x + 1] << 5) |
+                (grid[downRow + x - 1] << 6) |
+                (grid[downRow + x]     << 7) |
+                (grid[downRow + x + 1] << 8);
             
-            alive = lut[lutIdx];
+            const alive = lut[lutIdx];
             next[midRow + x] = alive;
             newAlive += alive;
         }
         
+        // 三行指针整体下移
         upRow = midRow;
         midRow = downRow;
         downRow += strideVal;
     }
     
+    // 交换双缓冲
     currentGrid = next;
     nextGrid = grid;
     aliveCount = newAlive;
@@ -399,7 +401,7 @@ function nextGeneration() {
     dirty = true;
 }
 
-// ========== 笔刷：原生批量填充 ==========
+// ========== 笔刷绘制 ==========
 function applyBrush(worldX, worldY, mode) {
     const half = brushSize >> 1;
     const startX = worldX - half + 1;
