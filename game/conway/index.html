@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>康威生命游戏</title>
     <script>
-        const titles=["康威生命游戏","MrPigcken 杨癫发骁搬运豆包AI"];
+        const titles=["康威生命游戏","MrPigcken 杨癫发骁搬运自豆包AI"];
         let index=0;
         let timer;
         function autoTitle() {
             timer=setInterval(() => {
                 index=(index + 1) % titles.length;
                 document.title = titles[index];
-            },2000);
+            },3000);
         }
         autoTitle();
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 clearInterval(timer);
-                document.title = "%（*%&￥&%（*……）&￥*&%&￥*&%￥*……（*";
+                document.title = "回来啊，干嘛呢？";
             } else {
                 autoTitle();
             }
