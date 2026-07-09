@@ -3,7 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>康威生命游戏 - 高性能版</title>
+    <title>康威生命游戏</title>
+    <script>
+        const titles=["康威生命游戏","豆包AI制作","MrPigcken 杨癫发骁","搬运"];
+        let index=0;
+        let timer;
+        function autoTitle() {
+            timer=setInterval(() => {
+                index=(index + 1) % titles.length;
+                document.title = titles[index];
+            }, 1000);
+        }
+        autoTitle();
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearInterval(timer);
+                document.title = "%（*%&￥&%（*……）&￥*&%&￥*&%￥*……（*";
+            } else {
+                autoTitle();
+            }
+        })
+    </script>
     <link rel="stylesheet" href="assert/style.css">
 </head>
 <body>
