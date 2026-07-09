@@ -30,12 +30,20 @@
 
         <div class="slider-group">
             <label>笔刷/橡皮大小</label>
-            <input type="range" id="brushSlider" min="1" max="20" value="1">
+            <input type="range" id="brushSlider" min="1" max="100" value="1">
+            <input type="number" id="brushSizeInput" min="1" max="100" value="1">
         </div>
 
         <div class="slider-group">
-            <label>网格尺寸</label>
-            <input type="range" id="canvasSizeSlider" min="128" max="8192" step="128" value="1024">
+            <label>网格宽度</label>
+            <input type="range" id="widthSlider" min="128" max="8192" step="128" value="1024">
+            <input type="number" id="widthInput" min="128" max="8192" step="128" value="1024">
+        </div>
+
+        <div class="slider-group">
+            <label>网格高度</label>
+            <input type="range" id="heightSlider" min="128" max="8192" step="128" value="1024">
+            <input type="number" id="heightInput" min="128" max="8192" step="128" value="1024">
         </div>
     </div>
 
@@ -64,7 +72,7 @@
 
     <div class="rules">
         <p><strong>游戏规则：</strong>存活细胞周围有 2 或 3 个存活邻居则继续存活；死亡细胞周围恰好有 3 个存活邻居则复活；其余情况细胞死亡。边界为封闭模式，细胞出界直接消失。</p>
-        <p><strong>操作说明：</strong>左键绘制/擦除细胞（点击橡皮擦切换模式），右键临时擦除，按住鼠标中键拖动平移画布，滚轮缩放视图。点击图案按钮后可在画布放置，支持框选保存自定义图案。快捷键：E 切换橡皮擦，ESC 取消当前模式。</p>
+        <p><strong>操作说明：</strong>左键绘制/擦除细胞（点击橡皮擦切换模式），右键临时擦除，按住鼠标中键拖动平移画布，滚轮缩放视图。快捷键：E 切换橡皮擦，ESC 取消当前模式。所有数值滑块均支持键盘输入精确调整。</p>
     </div>
 
     <script src="assert/script.js"></script>

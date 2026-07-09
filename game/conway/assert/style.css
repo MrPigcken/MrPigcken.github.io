@@ -106,6 +106,32 @@ input[type="range"] {
     accent-color: #38bdf8;
 }
 
+input[type="number"] {
+    width: 56px;
+    padding: 4px 6px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    color: #e2e8f0;
+    font-size: 13px;
+    text-align: center;
+    outline: none;
+}
+
+input[type="number"]:focus {
+    border-color: #38bdf8;
+}
+
+/* 隐藏数字输入框上下箭头 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
 .canvas-container {
     position: relative;
     border-radius: 8px;
