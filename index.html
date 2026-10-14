@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./assert/image/avatar.png">
+    <script>
+        (function() {
+            try {
+                const key = 'site-theme';
+                const saved = localStorage.getItem(key);
+                const root = document.documentElement;
+                const mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+                function setThemeByMode(mode) {
+                    if(mode === 'dark')
+                        root.setAttribute('data-theme','dark');
+                    else if(mode === 'light')
+                        root.removeAttribute('data-theme');
+                    else if(mode === 'auto'){
+                        if(mq.matches)
+                            root.setAttribute('data-theme','dark');
+                        else
+                            root.removeAttribute('data-theme');
+                    }
+                }
+
+                if(saved)
+                    setThemeByMode(saved);
+                else
+                    setThemeByMode('auto');
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
+    <link rel="stylesheet" href="./assert/css/main.css">
+    <title>github</title>
+    <script>
+        const titles=[];
+        let index=0;
+        let timer;
+        function autoTitle() {
+            timer=setInterval(() => {
+                index=(index + 1) % titles.length;
+                document.title = titles[index];
+            }, 1000);
+        }
+        autoTitle();
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearInterval(timer);
+                document.title = "";
+            } else {
+                autoTitle();
+            }
+        })
+    </script>
+</head>
+<body>
+    <div class="theme">
+        <span class="theme-text">亮色 系统 暗色</span>
+        <button id="theme-toggle"></button>
+    </div>
+    <p>居然有人会来访问？</p>
+    <script src="./assert/js/theme.js"></script>
+</body>
+</html>
