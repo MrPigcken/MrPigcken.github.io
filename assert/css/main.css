@@ -1,10 +1,14 @@
 :root {
  --bg-color: #ffffff;
  --text-color: #090f14;
+
+ --download:rgb(23, 197, 0);
 }
 [data-theme="dark"] {
  --bg-color: #3f5892;
  --text-color: #fdfcfb;
+
+ --download:aquamarine;
 }
 body {
  background: var(--bg-color);
@@ -54,3 +58,8 @@ body {
 #theme-toggle.auto::after{transform: translateX(21px);}
 #theme-toggle.dark{background:#9c27b0;}
 #theme-toggle.dark::after{transform: translateX(42px);}
+
+.download{
+  color:var(--download);
+  text-decoration: none;
+}
